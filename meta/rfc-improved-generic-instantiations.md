@@ -65,7 +65,7 @@ function Sum (X: Float_Array) return Float is
    function Red is new Reduce (Positive, Float, Float_Array, Float, "+");
 begin
    return Red (0.0, X);
-end Sin;
+end Sum;
 ```
 
 This way:
@@ -95,7 +95,7 @@ F2 : Vector (Positive)
 
 ### Expected high level benefits
 
-More generally, we expect the following benefits from implementation of those
+More generally, we expect the following benefits from implementing those
 improvements:
 
 * Better code sharing/reduced code size: Due to the paradigm of explicit
@@ -124,7 +124,7 @@ function Sum (X: Float_Array) return Float is
    function Red is new Array_Reduce  (<>, <>, Float_Array, Float, "+");
 begin
    return Red (0.0, X);
-end Sin;
+end Sum;
 ```
 
 Here, we're allowed to not specify generic actual parameters for parameters
@@ -180,7 +180,7 @@ Here, the only generic actual we have to specify is \`Fn\`, because:
     from the expected target type of the function call. In this case,
     since `0.0` is an universal real, we deduce `Accum` from the
     expected type of the function call, which is the return type of the
-    `Sin` function.
+    `Sum` function.
 
 > **Note**
 > In terms of how implicit instantiations work, we can wonder whether each
