@@ -28,7 +28,7 @@ goals are:
    instantiation of generics.
 
 2. Another key design goal is for users to be able to refer to a "unique"
-   instance of a generic, by it's name. For example there will be a unique
+   instance of a generic, by its name. For example there will be a unique
    instance of `Ada.Containers.Vectors (Positive, Positive)`, and all people
    refering to it will refer to the same instance, which solves a long standing
    problem in generics, which is the ability to structurally reference unique
