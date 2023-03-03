@@ -99,9 +99,9 @@ More generally, we expect the following benefits from implementation of those
 improvements:
 
 * Better code sharing/reduced code size: Due to the paradigm of explicit
-  instantiations, it often happens because programmers cannot find duplications
+  instantiations, it often happens -- because programmers cannot find duplications
   easily/because it's hard to share instances because of the structure of the
-  project, that you have several instantiations with the same parameters.
+  project -- that you have several instantiations with the same parameters.
 
 * Better modularity:
 * Paradigm shift in terms of expressivity:
