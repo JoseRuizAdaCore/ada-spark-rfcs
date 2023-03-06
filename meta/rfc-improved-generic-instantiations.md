@@ -77,11 +77,11 @@ function Sum (X: Float_Array) return Float is (Reduce (Fn => "+") (X))
 Also, regarding generic packages & types, we would like the following:
 
 ```ada
-package Float_Vectors
+package Positive_Vectors
 is new Ada.Containers.Vectors (Positive, Positive);
 
-F : Float_Vectors.Vector;
-F2 : Float_Vectors.Vector;
+F : Positive_Vectors.Vector;
+F2 : Positive_Vectors.Vector;
 ```
 
 To be expressible this way:
