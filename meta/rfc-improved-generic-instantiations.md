@@ -40,7 +40,7 @@ goals are:
    example)
 
 3. We also want to simplify the way generic types (so, in other words, types
-   which are the main interest of a generic package, like for example
+   that are the main point of interest of a generic package, like for example
    `Ada.Containers.Vectors.Vector`) are referred to by users, to syntactically
    acknowledge that they're the main entity of the package.
 
