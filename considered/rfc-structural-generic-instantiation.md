@@ -207,3 +207,143 @@ to identify the feature with such a specific name, because it is usually just
 called "generics".
 
 TODO: Try to fill out this section nonetheless
+
+Issues to consider
+==================
+
+The accessibility level of an instance of a generic package can impact both
+the static legality and the dynamic behavior of a program. Examples
+illustrating this are provided below. This suggests that the point at which
+an implicit instance is declared should be well-defined.
+
+First, a static example:
+
+    generic
+    package G1 is
+      Int : aliased Integer;
+    end package;
+
+    type Int_Ref is access all Integer;
+    Ref : Int_Ref;
+
+    package I1 is new G1;
+
+    procedure Foo is
+       package I2 is new G1;
+    begin
+       Ref := I1.Int'Access; -- legal
+       Ref := I2.Int'Access; -- illegal
+    end Foo;
+
+One might argue that this is not a problem since we do not plan to allow
+implicit instances of generic packages that declare variables. But the
+entity declared in the generic have been a constant or even a subprogram
+(with corresponding changes to the access type declaration).
+
+Next, a dynamic example, referencing the same G1, Int_Ref, Ref, and I1
+declarations:
+
+     procedure Bar is
+       package I2 is new G1;
+       procedure Update_Ref (Value : access Integer) is
+       begin
+           Ref := Int_Ref (Value);
+       end;
+    begin
+       Update_Ref (I1.Int'Access); -- succeeds
+       Update_Ref (I2.Int'Access); -- raises Program_Error
+    end;
+
+Accessibility levels can also impact the results of membership tests
+and the point at which finalization takes place. We presumably want all
+these sorts of things to be well-defined for an implicitly declared instance.
+
+A general approach that was discussed briefly at the meeting was to
+hoist the implicit declaration of an instance to the outermost possible
+scope. For example, if a formal parameter of a subprogram is an actual
+parameter of an instance, then we can't hoist the implicit declaration
+to some point outside of the subprogram. But what does "outermost possible"
+mean in the case of renamings and subtype declarations? In a case like
+
+    procedure Foo (N : Natural) is
+       subtype S is String;
+       function Eq (X, Y : S) return Boolean renames "=";
+    begin
+       Some_Generic (S, Eq).Some_Procedure;
+    end;
+
+can we hoist the implicit instance declaration outside of Foo?
+What if we add a static constraint to the subtype declaration, as in
+    subtype S is String (1 .. 10);
+? Or a dynamic constraint, as in
+    subtype S is String (1 .. N);
+?
+
+Is some cases, there may be no suitable declaration site and so the
+implicit instance reference would presumably have to be rejected.
+Consider an implicit instance with an actual parameter that is a
+formal parameter of an expression function:
+    function Expr_Func (N : Natural) is
+       (Some_Generic(N).Some_Function);
+Would we want to allow this? Note that implicitly replacing an
+expression function with a "regular" function would give us a place
+to declare the implicitly-declared instance, but it would also introduce
+complexity (e.g., interactions with freezing).
+
+====
+
+When hoisting the implicit declaration of an instance, we probaby need to be
+careful not to introduce a case where the instance is elaborated before
+the corresponding generic body. We don't want to introduce an
+access-before-elaboration failure. Similarly, if would not be good if we have a
+subprogram that is never called and it contains a reference to an implicitly
+declared package instance, and if that instance gets hoisted to some point outside
+of the subprogram and then the elaboration of the instance propagates an exception.
+
+====
+
+We want to allow, but not require, sharing of implicitly declared instances
+that have the same actual parameters. The idea is that program legality
+and behavior should be unaffected by such sharing (or its absence). That's
+one reason, for example, that we want to disallow implicit instances of
+generics that have variable state (or which query variable state during their
+elaboration).
+
+One case that requires some thought is tagged type declarations. Consider
+    subtype S1 is Some_Generic (Integer, "+").Some_Tagged_Type;
+    subtype S2 is Some_Generic (Integer, "+").Some_Tagged_Type;
+    Flag : Boolean := S1'Tag = S2'Tag;
+
+If two tagged types have distinct tags and neither is descended from
+the other, then allowing conversion between the types (implicit or
+explicit) seems like it would lead to problems. So if we are going to
+treat S1 and S2 as being subtypes of the same type, then the two
+implicit instance references probably need to be somehow required to refer
+to the same instance.
+
+Another somewhat similar case is access equality, as in
+
+     type Ref is access procedure;
+     Ptr1 : Ref := Some_Generic (Integer, "+").Proc'Access;
+     Ptr2 : Ref := Some_Generic (Integer, "+").Proc'Access;
+     Flag : Boolean := Ptr1 = Ptr2;
+
+where Flag will probably be initialized to True if and only if instance
+sharing occurs (although in this particular case, Flag might be False even
+if sharing occurs because of RM 4.5.2(13)). Similar scenarios involving
+an access-to-constant type are possible.
+
+[Aside: hopefully we will not introduce any violation of the equivalence
+rule for multi-identifier object declarations given in 3.3.1(7). We don't
+want to treat
+   X, Y : Some_Generic (Integer, "+").T;
+differently than
+   X : Some_Generic (Integer, "+").T;
+   Y : Some_Generic (Integer, "+").T;
+with respect to allowing/forbidding instance sharing]
+
+One approach is to invent rules to eliminate optional instance sharing -
+in cases where it makes a difference, sharing should be forbidden or
+required. Another approach is to give up on the ideal that program
+behavior should be unaffected by whether the implementation chooses to
+share instances or not.
