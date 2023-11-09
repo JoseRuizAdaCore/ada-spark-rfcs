@@ -122,47 +122,48 @@ Types are not overloadable, so omitting earlier actual parameters does not compl
 resolving the name of an actual type in an instance. This is not true for subprograms.
 Do we really want to require an implementation to support something like
 
-  procedure Foo is
-  
+```ada
+procedure Foo is
+
    type T1 is null record;
-   
+
    type T2 is null record; -- only T2 has both Procs defined
-   
+
    type T3 is null record;
 
    procedure Actual_Proc1 (X1 : T1) is null;
-   
+
    procedure Actual_Proc1 (X2 : T2) is null;
 
    procedure Actual_Proc2 (X2 : T2) is null;
-   
+
    procedure Actual_Proc2 (X3 : T3) is null;
 
    generic
-   
       type Formal_Type is private;
-      
+
       with procedure Formal_Proc1 (X : Formal_Type);
-      
+
       with procedure Formal_Proc2 (X : Formal_Type);
    package G is
-   
+
    end G;
 
    package I is new G
-   
+
       (-- Formal_Type => T2, -- [To be inferred]
 
        Formal_Proc1 => Actual_Proc1,
-       
+
        Formal_Proc2 => Actual_Proc2);
-       
-  begin
-  
-   null;
-   
-  end Foo;
-  
+
+begin
+
+  null;
+
+end Foo;
+```
+
 ? Whatever resolution rules we want to impose need to be defined.
 
 If an actual subprogram is given and the corresponding formal subprogram has a parameter
@@ -170,13 +171,15 @@ If an actual subprogram is given and the corresponding formal subprogram has a p
 subtype, or only about the corresponding actual type? The point is that 12.6(8) only requires mode conformance, not subtype conformance.
 The following example is legal:
 
-     generic
-         type T is private;
-        with function F (X : T) return String;
-     package G is ... end G;
+```ada
+generic
+   type T is private;
+   with function F (X : T) return String;
+package G is ... end G;
 
-    package I is new G (Natural, Integer'Image);
-    
+package I is new G (Natural, Integer'Image);
+```
+
 despite the fact that Integer'Image takes an Integer parameter, not a Natural parameter.
 So if we omitted the first actual parameter and tried to infer it from the second, we'd have to assume subtype conformance.
 That might be ok, but we should make an explicit decision about that point.
@@ -184,18 +187,20 @@ That might be ok, but we should make an explicit decision about that point.
 We'll need to define rules for dealing with both consistent and inconsistent overspecification of inferred generic actuals.
 Consider:
 
-     generic
-         type Designated is private;
-         type Ref1 is access Designated;
-         type Ref2 is access Designated;
-     package G is end G;
+```ada
+generic
+    type Designated is private;
+    type Ref1 is access Designated;
+    type Ref2 is access Designated;
+package G is end G;
 
-     type Nat_Ref is access Natural;
-     type Int_Ref is access Integer;
+type Nat_Ref is access Natural;
+type Int_Ref is access Integer;
 
-     type Legal_Inst (Ref1 => Nat_Ref, Ref2 => Nat_Ref);
-     type Illegal_Inst (Ref1 => Nat_Ref, Ref2 => Int_Ref);
-     
+type Legal_Inst (Ref1 => Nat_Ref, Ref2 => Nat_Ref);
+type Illegal_Inst (Ref1 => Nat_Ref, Ref2 => Int_Ref);
+```
+
 If we want to get fancy, we can say that an inferred subtype from a formal type
 takes precedence over an inferred subtype from a formal subprogram (because, as
 mentioned above, an actual subprogram only has to be mode conformant). But do we want this complexity?
