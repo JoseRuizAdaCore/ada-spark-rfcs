@@ -291,4 +291,4 @@ package G is end G;
 package Inst is new G (Nat_Ref, Integer'Image) -- Would be illegal if we don't get fancy, but legal if you pass `Designated` explicitly
 ```
 
-
+Tuck: What about formal objects?  If a type is passed in along with a formal object, presumably the formal object by itself would be enough to determine the corresponding actual *type*.  Presumably again the inferred *subtype* of the actual would default to that of the object, unless there is a stronger matching requirement from some other formal.
