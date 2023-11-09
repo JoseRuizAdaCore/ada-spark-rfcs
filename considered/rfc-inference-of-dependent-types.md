@@ -238,6 +238,7 @@ end Foo;
 ? Whatever resolution rules we want to impose need to be defined.
 
 > WG (Steve, Daniel, Romain, Raph): Let's put in place the rule "if for a subprogram formal, an actual designates more than one subprogram, the set of subprogram won't participate in name resolution"
+> This restriction might be relaxed at a later stage (or not)
 
 If an actual subprogram is given and the corresponding formal subprogram has a parameter
 (or result) of a formal type, do we want to make inferences about the corresponding actual
