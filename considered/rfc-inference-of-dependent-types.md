@@ -237,7 +237,7 @@ end Foo;
 
 ? Whatever resolution rules we want to impose need to be defined.
 
-> WG (Steve, Daniel, Romain, Raph): Let's put in place the rule "if for a subprogram formal, an actual designates more than one subprogram, the set of subprogram won't participate in name resolution"
+> WG (Steve, Daniel, Romain, Raph): Let's put in place the rule "if the name of an actual, without context, designates more than one entity, the actual won't participate in resolution"
 > This restriction might be relaxed at a later stage (or not)
 
 If an actual subprogram is given and the corresponding formal subprogram has a parameter
@@ -278,4 +278,17 @@ type Illegal_Inst (Ref1 => Nat_Ref, Ref2 => Int_Ref);
 If we want to get fancy, we can say that an inferred subtype from a formal type
 takes precedence over an inferred subtype from a formal subprogram (because, as
 mentioned above, an actual subprogram only has to be mode conformant). But do we want this complexity?
+
+> WG: We **need** to get fancy, because else some cases will be illegal with infered parameters, that would otherwise be legal
+
+```ada
+generic
+    type Designated is private;
+    type Ref1 is access Designated;
+    with function F (X : T) return String;
+package G is end G;
+
+package Inst is new G (Nat_Ref, Integer'Image) -- Would be illegal if we don't get fancy, but legal if you pass `Designated` explicitly
+```
+
 
