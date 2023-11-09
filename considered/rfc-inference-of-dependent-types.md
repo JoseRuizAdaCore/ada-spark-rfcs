@@ -118,6 +118,77 @@ DB      : Person_Array := ...;
 Younger : Person := Min_By_Age (DB);
 ```
 
+> **Note**
+> We decided to not include generic formal packages, because the implementer
+> already has the option to not require the user to pass in the dependent
+> types, via the `<>` syntax:
+>
+> ```ada
+> generic
+>    with package P is new Q (<>);
+> ```
+
+Reference-level explanation
+===========================
+
+To be completed
+
+### Syntax changes
+
+No syntax changes planned
+
+### Semantic changes
+
+When in the presence of a dependent type, as defined above, in a generic
+formal, the instantiator of the generic can omit this type, either passing `<>`
+explicitly, or just omitting it from the instantiation completely.
+
+The compiler will deduce it from other parameters.
+
+Rationale and alternatives
+==========================
+
+The rationale is contained in the high level RFC on generics.
+
+As far as alternatives go, we could imagine a world where developers don't even
+have to specify the dependent formals:
+
+```ada
+generic
+   type Array_Type is array (<>) of <>;
+package Array_Operations is
+   subtype Index_Type is Array_Type'Index_Type;
+   subtype Element_Type is Array_Type'Element_Type;
+end Array_Operations;
+
+...
+
+type Int_Array is array (Positive range <>) of Integer;
+
+package Int_Array_Operations is new Array_Operations
+  (Array_Type   => Int_Array);
+```
+
+However, the current alternative has the advantage of being backwards
+compatible with existing generic declarations.
+
+
+Drawbacks
+=========
+
+N/A
+
+Prior art
+=========
+
+This is very specific to Ada's generic formals system, but we could consider
+that they way generic formal packages' own params can be deduced when
+instantiating the generic, is pretty similar to what we propose here, so that
+this is the extension of an already existing mechanism.
+
+Discussion
+==========
+
 Types are not overloadable, so omitting earlier actual parameters does not complicate
 resolving the name of an actual type in an instance. This is not true for subprograms.
 Do we really want to require an implementation to support something like
@@ -205,70 +276,3 @@ If we want to get fancy, we can say that an inferred subtype from a formal type
 takes precedence over an inferred subtype from a formal subprogram (because, as
 mentioned above, an actual subprogram only has to be mode conformant). But do we want this complexity?
 
-> **Note**
-> We decided to not include generic formal packages, because the implementer
-> already has the option to not require the user to pass in the dependent
-> types, via the `<>` syntax:
->
-> ```ada
-> generic
->    with package P is new Q (<>);
-> ```
-
-Reference-level explanation
-===========================
-
-To be completed
-
-### Syntax changes
-
-No syntax changes planned
-
-### Semantic changes
-
-When in the presence of a dependent type, as defined above, in a generic
-formal, the instantiator of the generic can omit this type, either passing `<>`
-explicitly, or just omitting it from the instantiation completely.
-
-The compiler will deduce it from other parameters.
-
-Rationale and alternatives
-==========================
-
-The rationale is contained in the high level RFC on generics.
-
-As far as alternatives go, we could imagine a world where developers don't even
-have to specify the dependent formals:
-
-```ada
-generic
-   type Array_Type is array (<>) of <>;
-package Array_Operations is
-   subtype Index_Type is Array_Type'Index_Type;
-   subtype Element_Type is Array_Type'Element_Type;
-end Array_Operations;
-
-...
-
-type Int_Array is array (Positive range <>) of Integer;
-
-package Int_Array_Operations is new Array_Operations
-  (Array_Type   => Int_Array);
-```
-
-However, the current alternative has the advantage of being backwards
-compatible with existing generic declarations.
-
-
-Drawbacks
-=========
-
-N/A
-
-Prior art
-=========
-
-This is very specific to Ada's generic formals system, but we could consider
-that they way generic formal packages' own params can be deduced when
-instantiating the generic, is pretty similar to what we propose here, so that
-this is the extension of an already existing mechanism.
